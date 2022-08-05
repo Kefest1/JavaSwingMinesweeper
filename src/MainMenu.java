@@ -1,3 +1,65 @@
-public class MainMenu {
+import javax.swing.*;
+import java.awt.*;
+
+public class MainMenu extends JLabel {
+    GameFrame gameFrame;
+
+    JLabel greeting;
+    JLabel nicknameText;
+    JTextField nicknameHolder;
+    JButton startGameButton;
+
+    public MainMenu(GameFrame gameFrame) {
+        this.gameFrame = gameFrame;
+        prepareGreetingPanel();
+        prepareThis();
+        prepareNicknameHolder();
+        prepareButton();
+    }
+
+    private void prepareThis() {
+        this.setOpaque(true);
+        this.setBackground(new Color(43, 43, 44));
+        this.setBorder(BorderFactory.createLineBorder(Color.BLACK, 12));
+        gameFrame.add(this);
+    }
+
+    private void prepareGreetingPanel() {
+        greeting = new JLabel();
+        greeting.setBounds(30, 0 ,800, 450);
+        greeting.setText("Welcome to the minesweeper game");
+        greeting.setFont(new Font("Mv boli", Font.PLAIN, 42));
+        greeting.setVerticalTextPosition(JLabel.TOP);
+        greeting.setHorizontalTextPosition(JLabel.CENTER);
+        greeting.setForeground(Color.RED);
+        greeting.setIcon(new ImageIcon("icons\\mineInMenu.png"));
+        greeting.setIconTextGap(50);
+        this.add(greeting);
+    }
+
+    private void prepareNicknameHolder() {
+        nicknameHolder = new JTextField();
+        nicknameHolder.setBounds(100, 450, 200, 50);
+
+        nicknameText = new JLabel("Enter username");
+        nicknameText.setBounds(100, 400, 200, 50);
+        nicknameText.setForeground(Color.WHITE);
+        nicknameText.setFont(new Font("Mv boli", Font.PLAIN, 24));
+        this.add(nicknameHolder);
+        this.add(nicknameText);
+    }
+
+    private void prepareButton() {
+        startGameButton = new JButton("Start game");
+        startGameButton.setFocusable(false);
+        startGameButton.setBounds(100, 530, 100, 50);
+        startGameButton.addActionListener(
+                e -> {
+                    this.gameFrame.menuLabel.hide();
+                    this.gameFrame.gameLabel = new MineSweeper(this.gameFrame);
+                }
+        );
+        this.add(startGameButton);
+    }
 
 }
