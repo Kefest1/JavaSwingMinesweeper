@@ -8,13 +8,14 @@ public class MainMenu extends JLabel {
     JLabel nicknameText;
     JTextField nicknameHolder;
     JButton startGameButton;
+    JButton exitGameButton;
 
     public MainMenu(GameFrame gameFrame) {
         this.gameFrame = gameFrame;
         prepareGreetingPanel();
         prepareThis();
         prepareNicknameHolder();
-        prepareButton();
+        prepareButtons();
     }
 
     private void prepareThis() {
@@ -49,7 +50,7 @@ public class MainMenu extends JLabel {
         this.add(nicknameText);
     }
 
-    private void prepareButton() {
+    private void prepareButtons() {
         startGameButton = new JButton("Start game");
         startGameButton.setFocusable(false);
         startGameButton.setBounds(100, 530, 100, 50);
@@ -59,7 +60,16 @@ public class MainMenu extends JLabel {
                     this.gameFrame.gameLabel = new MineSweeper(this.gameFrame);
                 }
         );
+
+        exitGameButton = new JButton("Exit");
+        exitGameButton.setFocusable(false);
+        exitGameButton.setBounds(100, 600, 100, 50);
+        exitGameButton.addActionListener(
+                e -> this.gameFrame.dispose()
+        );
+
         this.add(startGameButton);
+        this.add(exitGameButton);
     }
 
 }
