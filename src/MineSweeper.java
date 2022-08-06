@@ -12,6 +12,9 @@ public class MineSweeper extends JLabel {
     public static final int FIELD_GAP = 10;
     public static final int FIELD_GAP_HALF = FIELD_GAP / 2;
 
+    private int FIELDS_TO_UNCOVER = (COLUMN_FIELDS * ROW_FIELDS) - MINES_AMOUNT;
+
+
     Image imageFieldFlagged = new ImageIcon("icons\\fieldIsFlagged.PNG").getImage();
     Image[] fieldNeighbourMines = {
             new ImageIcon("icons\\fieldZero.png").getImage(),
@@ -62,19 +65,16 @@ public class MineSweeper extends JLabel {
         for (int i = 0; i < COLUMN_FIELDS; i++) {
             for (int j = 0; j < ROW_FIELDS; j++) {
                 if (mineField[i][j] == StatusOfField.FIELD_IS_FLAGGED) {
-                    g.drawImage(new ImageIcon("icons\\fieldIsFlagged.PNG").getImage(),i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
-                }
-                else if (mineField[i][j] == StatusOfField.FIELD_IS_UNCOVERED) {
-                    g.drawImage(howManyMinedNeighbours(i, j),i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
+                    g.drawImage(new ImageIcon("icons\\fieldIsFlagged.PNG").getImage(), i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
+                } else if (mineField[i][j] == StatusOfField.FIELD_IS_UNCOVERED) {
+                    g.drawImage(howManyMinedNeighboursPicture(i, j), i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
 
-                }
-                else {
+                } else {
                     g.drawRect(i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, MINE_SIZE, MINE_SIZE);
                     g.fillRect(i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, MINE_SIZE, MINE_SIZE);
                 }
             }
         }
-
 
         Graphics2D graphics2D = (Graphics2D) g;
         graphics2D.setStroke(new java.awt.BasicStroke((float) CHECK_BUTTON_BORDER_THICKNESS));
@@ -135,6 +135,7 @@ public class MineSweeper extends JLabel {
                 e -> {
                     if (mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_COVERED)
                         mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_FLAGGED;
+                    else mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_COVERED;
                     repaint();
                 }
         );
@@ -150,11 +151,20 @@ public class MineSweeper extends JLabel {
                                 "Game over", JOptionPane.ERROR_MESSAGE
                         );
                         gameFrame.isRunning = false;
-                    }
-                    else {
+                    } else {
+                        if (howManyMinedNeighboursIndex(getXFieldCoordinate(), getYFieldCoordinate()) == 0) {
+                            uncoverFieldsWithNoNeighbours(getXFieldCoordinate(), getYFieldCoordinate());
+                        }
+                        else FIELDS_TO_UNCOVER--;
+                        if (FIELDS_TO_UNCOVER == 0){
+                            JOptionPane.showMessageDialog(
+                                    null, "You won!",
+                                    "Congratulations!", JOptionPane.INFORMATION_MESSAGE
+                            );
+                        }
                         mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_UNCOVERED;
+                        repaint();
                     }
-                    repaint();
                 }
         );
 
@@ -187,12 +197,16 @@ public class MineSweeper extends JLabel {
         return currentlyAt.y / FIELD_SIZE;
     }
 
-    private Image howManyMinedNeighbours(int x, int y) {
+    private Image howManyMinedNeighboursPicture(int x, int y) {
+        return fieldNeighbourMines[howManyMinedNeighboursIndex(x, y)];
+    }
+
+    private int howManyMinedNeighboursIndex(int x, int y) {
         int retIndexOfPicture = 0;
 
+        retIndexOfPicture += isMinedInt(x + 1, y - 1);
         retIndexOfPicture += isMinedInt(x + 1, y);
         retIndexOfPicture += isMinedInt(x + 1, y + 1);
-        retIndexOfPicture += isMinedInt(x + 1, y - 1);
 
         retIndexOfPicture += isMinedInt(x - 1, y);
         retIndexOfPicture += isMinedInt(x - 1, y + 1);
@@ -201,10 +215,39 @@ public class MineSweeper extends JLabel {
         retIndexOfPicture += isMinedInt(x, y - 1);
         retIndexOfPicture += isMinedInt(x, y + 1);
 
-
-
-        return fieldNeighbourMines[retIndexOfPicture];
+        return retIndexOfPicture;
     }
 
+    private void uncoverFieldsWithNoNeighbours(int x, int y) {
+        uncoverFieldsWithNoNeighboursHelp(x, y);
+        repaint();
+    }
+
+    private void uncoverFieldsWithNoNeighboursHelp(int x, int y) {
+        if (x >= 0 && y >= 0 && x < COLUMN_FIELDS && y < ROW_FIELDS) {
+
+            if (mineField[x][y] == StatusOfField.FIELD_IS_UNCOVERED)
+                return;
+
+            uncoverField(x, y);
+            if (howManyMinedNeighboursIndex(x, y) == 0) {
+                uncoverFieldsWithNoNeighboursHelp(x + 1, y - 1);
+                uncoverFieldsWithNoNeighboursHelp(x + 1, y);
+                uncoverFieldsWithNoNeighboursHelp(x + 1, y + 1);
+
+                uncoverFieldsWithNoNeighboursHelp(x - 1, y - 1);
+                uncoverFieldsWithNoNeighboursHelp(x - 1, y);
+                uncoverFieldsWithNoNeighboursHelp(x - 1, y + 1);
+
+                uncoverFieldsWithNoNeighboursHelp(x, y - 1);
+                uncoverFieldsWithNoNeighboursHelp(x, y + 1);
+            }
+        }
+    }
+
+    private void uncoverField(int x, int y) {
+        FIELDS_TO_UNCOVER--;
+        mineField[x][y] = StatusOfField.FIELD_IS_UNCOVERED;
+    }
 
 }
