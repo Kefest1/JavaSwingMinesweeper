@@ -12,6 +12,19 @@ public class MineSweeper extends JLabel {
     public static final int FIELD_GAP = 10;
     public static final int FIELD_GAP_HALF = FIELD_GAP / 2;
 
+    Image imageFieldFlagged = new ImageIcon("icons\\fieldIsFlagged.PNG").getImage();
+    Image[] fieldNeighbourMines = {
+            new ImageIcon("icons\\fieldZero.png").getImage(),
+            new ImageIcon("icons\\fieldOne.png").getImage(),
+            new ImageIcon("icons\\fieldTwo.png").getImage(),
+            new ImageIcon("icons\\fieldThree.png").getImage(),
+            new ImageIcon("icons\\fieldFour.png").getImage(),
+            new ImageIcon("icons\\fieldFive.png").getImage(),
+            new ImageIcon("icons\\fieldSix.png").getImage(),
+            new ImageIcon("icons\\fieldSeven.png").getImage(),
+            new ImageIcon("icons\\fieldEight.png").getImage()
+    };
+
     Random random;
     Coordinates[] minesCoordinates;
     Coordinates currentlyAt;
@@ -49,9 +62,11 @@ public class MineSweeper extends JLabel {
         for (int i = 0; i < COLUMN_FIELDS; i++) {
             for (int j = 0; j < ROW_FIELDS; j++) {
                 if (mineField[i][j] == StatusOfField.FIELD_IS_FLAGGED) {
-                    Image image = new ImageIcon("icons\\fieldIsFlagged.PNG").getImage();
-                    Graphics2D graphics2D = (Graphics2D) g;
-                    g.drawImage(image,i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
+                    g.drawImage(new ImageIcon("icons\\fieldIsFlagged.PNG").getImage(),i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
+                }
+                else if (mineField[i][j] == StatusOfField.FIELD_IS_UNCOVERED) {
+                    g.drawImage(howManyMinedNeighbours(i, j),i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
+
                 }
                 else {
                     g.drawRect(i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, MINE_SIZE, MINE_SIZE);
@@ -89,7 +104,7 @@ public class MineSweeper extends JLabel {
         mineField = new StatusOfField[COLUMN_FIELDS][ROW_FIELDS];
         for (int i = 0; i < COLUMN_FIELDS; i++)
             for (int j = 0; j < ROW_FIELDS; j++)
-                mineField[i][j] = StatusOfField.FIELD_IS_UNCOVERED;
+                mineField[i][j] = StatusOfField.FIELD_IS_COVERED;
     }
 
     static class Coordinates {
@@ -118,7 +133,7 @@ public class MineSweeper extends JLabel {
         buttonMarkFieldAsMine.setBounds(570, 100, 180, 75);
         buttonMarkFieldAsMine.addActionListener(
                 e -> {
-                    if (mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_UNCOVERED)
+                    if (mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_COVERED)
                         mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_FLAGGED;
                     repaint();
                 }
@@ -155,12 +170,40 @@ public class MineSweeper extends JLabel {
         return false;
     }
 
+    private int isMinedInt(int x, int y) {
+        // Important - returns zero when out of bounds
+        for (int i = 0; i < MINES_AMOUNT; i++)
+            if (minesCoordinates[i].x == x && minesCoordinates[i].y == y)
+                return 1;
+
+        return 0;
+    }
+
     private int getXFieldCoordinate() {
         return currentlyAt.x / FIELD_SIZE;
     }
 
     private int getYFieldCoordinate() {
         return currentlyAt.y / FIELD_SIZE;
+    }
+
+    private Image howManyMinedNeighbours(int x, int y) {
+        int retIndexOfPicture = 0;
+
+        retIndexOfPicture += isMinedInt(x + 1, y);
+        retIndexOfPicture += isMinedInt(x + 1, y + 1);
+        retIndexOfPicture += isMinedInt(x + 1, y - 1);
+
+        retIndexOfPicture += isMinedInt(x - 1, y);
+        retIndexOfPicture += isMinedInt(x - 1, y + 1);
+        retIndexOfPicture += isMinedInt(x - 1, y - 1);
+
+        retIndexOfPicture += isMinedInt(x, y - 1);
+        retIndexOfPicture += isMinedInt(x, y + 1);
+
+
+
+        return fieldNeighbourMines[retIndexOfPicture];
     }
 
 
