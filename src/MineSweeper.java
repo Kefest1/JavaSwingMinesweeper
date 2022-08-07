@@ -6,13 +6,14 @@ public class MineSweeper extends JLabel {
     public static final int ROW_FIELDS = 11;
     public static final int CHECK_BUTTON_BORDER_THICKNESS = 7;
     public static final int COLUMN_FIELDS = 13;
-    public static final int MINES_AMOUNT = 15;
+    public static final int MINES_AMOUNT = 16;
     public static final int FIELD_SIZE = 60;
     public static final int MINE_SIZE = 50;
     public static final int FIELD_GAP = 10;
     public static final int FIELD_GAP_HALF = FIELD_GAP / 2;
 
-    private int fieldsToUncover = (COLUMN_FIELDS * ROW_FIELDS) - MINES_AMOUNT;
+    private static final int TOTAL_FIELDS_TO_UNCOVER = (COLUMN_FIELDS * ROW_FIELDS) - MINES_AMOUNT;
+    private int fieldsToUncover = TOTAL_FIELDS_TO_UNCOVER;
     private int minesRemaining = MINES_AMOUNT;
 
 
@@ -34,7 +35,8 @@ public class MineSweeper extends JLabel {
     Coordinates currentlyAt;
     JButton buttonMarkFieldAsMine;
     JButton buttonUncoverField;
-    JButton buttonUnFlagField;
+    JButton buttonExit;
+    JButton buttonRetry; // regardless of situation
 
     JLabel labelWithRemainingMinesAmount;
     JLabel youWonLabel;
@@ -46,7 +48,7 @@ public class MineSweeper extends JLabel {
 
     GameFrame gameFrame;
 
-    public MineSweeper(GameFrame gameFrame) {
+    MineSweeper(GameFrame gameFrame) {
         setMineField();
         this.setFocusable(true);
         this.requestFocus();
@@ -71,7 +73,7 @@ public class MineSweeper extends JLabel {
         for (int i = 0; i < COLUMN_FIELDS; i++) {
             for (int j = 0; j < ROW_FIELDS; j++) {
                 if (mineField[i][j] == StatusOfField.FIELD_IS_FLAGGED) {
-                    g.drawImage(new ImageIcon("icons\\fieldIsFlagged.PNG").getImage(), i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
+                    g.drawImage(new ImageIcon(imageFieldFlagged).getImage(), i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
                 } else if (mineField[i][j] == StatusOfField.FIELD_IS_UNCOVERED) {
                     g.drawImage(howManyMinedNeighboursPicture(i, j), i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, null);
                 } else {
@@ -80,7 +82,6 @@ public class MineSweeper extends JLabel {
                 }
             }
         }
-
 
 
         Graphics2D graphics2D = (Graphics2D) g;
@@ -144,7 +145,7 @@ public class MineSweeper extends JLabel {
                     prepareLabelWithRemainingMinesAmount();
                     if (mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_COVERED)
                         mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_FLAGGED;
-                    else if(mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_FLAGGED)
+                    else if (mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_FLAGGED)
                         mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_COVERED;
 
                     repaint();
@@ -157,31 +158,30 @@ public class MineSweeper extends JLabel {
         buttonUncoverField.addActionListener(
                 e -> {
                     if (isMined(getXFieldCoordinate(), getYFieldCoordinate())) {
-                        JOptionPane.showMessageDialog(
-                                null, "Mine exploded, Game over",
-                                "Game over", JOptionPane.ERROR_MESSAGE
-                        );
-                        gameFrame.isRunning = false;
-
+                        gameOver();
                     } else {
-                        if (howManyMinedNeighboursIndex(getXFieldCoordinate(), getYFieldCoordinate()) == 0) {
+                        if (howManyMinedNeighboursIndex(getXFieldCoordinate(), getYFieldCoordinate()) == 0)
                             uncoverFieldsWithNoNeighbours(getXFieldCoordinate(), getYFieldCoordinate());
-                        }
                         else fieldsToUncover--;
-                        if (fieldsToUncover == 0){
-                            JOptionPane.showMessageDialog(
-                                    null, "You won!",
-                                    "Congratulations!", JOptionPane.INFORMATION_MESSAGE
-                            );
-                        }
+                        if (fieldsToUncover == 0) {
+                            repaint();
+                            prepareYouWonLabel();
+                        } else repaint();
                         mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_UNCOVERED;
-                        repaint();
                     }
                 }
         );
 
         this.add(buttonMarkFieldAsMine);
         this.add(buttonUncoverField);
+    }
+
+    private void gameOver() {
+        prepareLabelWithGameOver();
+        prepareButtonWithRetry();
+        repaint();
+        gameFrame.isRunning = false;
+        prepareExitButton();
     }
 
     private boolean isMined(int x, int y) {
@@ -262,13 +262,76 @@ public class MineSweeper extends JLabel {
         mineField[x][y] = StatusOfField.FIELD_IS_UNCOVERED;
     }
 
-    public void prepareLabelWithRemainingMinesAmount() {
+    private void prepareLabelWithRemainingMinesAmount() {
         if (labelWithRemainingMinesAmount != null) this.remove(labelWithRemainingMinesAmount);
-        labelWithRemainingMinesAmount = new JLabel("Remained " + minesRemaining + " mines");
+        labelWithRemainingMinesAmount = new JLabel(minesRemaining + " mines remaining");
         labelWithRemainingMinesAmount.setFont(new Font("Ink Free", Font.BOLD, 40));
         labelWithRemainingMinesAmount.setBounds(50, 50, 400, 100);
         labelWithRemainingMinesAmount.setForeground(Color.CYAN);
         this.add(labelWithRemainingMinesAmount);
+    }
+
+    private void prepareLabelWithGameOver() {
+        gameOverLabel = new JLabel("Game over");
+        gameOverLabel.setFont(new Font("Ink Free", Font.BOLD, 64));
+        gameOverLabel.setForeground(Color.RED);
+        gameOverLabel.setBounds(100, 100, 400, 75);
+        this.add(gameOverLabel);
+    }
+
+    private void prepareButtonWithRetry() {
+        this.remove(labelWithRemainingMinesAmount);
+        buttonRetry = new JButton("Retry");
+        buttonRetry.setBounds(100, 180, 150, 75);
+        buttonRetry.setFocusable(false);
+        buttonRetry.addActionListener(
+                e -> prepareNewGame()
+        );
+        this.add(buttonRetry);
+    }
+
+    private void prepareNewGame() {
+        fieldsToUncover = TOTAL_FIELDS_TO_UNCOVER;
+        minesRemaining = MINES_AMOUNT;
+        prepareLabelWithRemainingMinesAmount();
+        this.remove(labelWithRemainingMinesAmount);
+        setMineField();
+        generateMines();
+        currentlyAt = new Coordinates(0, 0);
+        createButtons();
+        prepareLabelWithRemainingMinesAmount();
+        gameFrame.isRunning = true;
+        currentlyAt.x = currentlyAt.y = 0;
+        if (youWonLabel != null) youWonLabel.setVisible(false);
+        if (gameOverLabel != null) gameOverLabel.setVisible(false);
+        if (buttonRetry != null) buttonRetry.setVisible(false);
+        if (buttonExit != null) buttonExit.setVisible(false);
+        repaint();
+        gameFrame.add(this);
+    }
+
+    private void prepareYouWonLabel() {
+        youWonLabel = new JLabel("You won!");
+        youWonLabel.setFont(new Font("Ink Free", Font.BOLD, 64));
+        youWonLabel.setForeground(Color.RED);
+        youWonLabel.setBounds(100, 100, 400, 75);
+        this.add(youWonLabel);
+        //prepareNewGame();
+        prepareExitButton();
+        prepareButtonWithRetry();
+    }
+
+    private void prepareExitButton() {
+        buttonExit = new JButton("Exit");
+        buttonExit.setBounds(300, 180, 150, 75);
+        buttonExit.setFocusable(false);
+        buttonExit.addActionListener(
+                e -> {
+                    gameFrame.remove(this);
+                    this.gameFrame.dispose();
+                }
+        );
+        this.add(buttonExit);
     }
 
 }

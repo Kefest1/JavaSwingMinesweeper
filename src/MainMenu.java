@@ -56,7 +56,7 @@ public class MainMenu extends JLabel {
         startGameButton.setBounds(100, 530, 100, 50);
         startGameButton.addActionListener(
                 e -> {
-                    this.gameFrame.menuLabel.hide();
+                    this.gameFrame.menuLabel.setVisible(false);
                     this.gameFrame.gameLabel = new MineSweeper(this.gameFrame);
                 }
         );
