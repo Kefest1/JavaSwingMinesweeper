@@ -12,6 +12,7 @@ public class MineSweeper extends JLabel {
     public static final int FIELD_GAP = 10;
     public static final int FIELD_GAP_HALF = FIELD_GAP / 2;
 
+    private boolean drawMine;
     private static final int TOTAL_FIELDS_TO_UNCOVER = (COLUMN_FIELDS * ROW_FIELDS) - MINES_AMOUNT;
     private int fieldsToUncover = TOTAL_FIELDS_TO_UNCOVER;
     private int minesRemaining = MINES_AMOUNT;
@@ -49,6 +50,7 @@ public class MineSweeper extends JLabel {
     GameFrame gameFrame;
 
     MineSweeper(GameFrame gameFrame) {
+        drawMine = false;
         setMineField();
         this.setFocusable(true);
         this.requestFocus();
@@ -81,6 +83,11 @@ public class MineSweeper extends JLabel {
                     g.fillRect(i * FIELD_SIZE + FIELD_GAP_HALF, j * FIELD_SIZE + FIELD_GAP_HALF + 300, MINE_SIZE, MINE_SIZE);
                 }
             }
+        }
+
+        if (drawMine) {
+            g.drawImage(new ImageIcon("icons\\mine.png").getImage(), currentlyAt.x + 5, currentlyAt.y + 307, null);
+            drawMine = false;
         }
 
 
@@ -141,13 +148,16 @@ public class MineSweeper extends JLabel {
         buttonMarkFieldAsMine.setBounds(570, 100, 180, 75);
         buttonMarkFieldAsMine.addActionListener(
                 e -> {
-                    minesRemaining--;
-                    prepareLabelWithRemainingMinesAmount();
-                    if (mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_COVERED)
+                    if (mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_COVERED) {
                         mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_FLAGGED;
-                    else if (mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_FLAGGED)
+                        if (minesRemaining > 0) minesRemaining--;
+                    }
+                    else if (mineField[getXFieldCoordinate()][getYFieldCoordinate()] == StatusOfField.FIELD_IS_FLAGGED) {
                         mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_COVERED;
+                        minesRemaining++;
+                    }
 
+                    prepareLabelWithRemainingMinesAmount();
                     repaint();
                 }
         );
@@ -159,6 +169,7 @@ public class MineSweeper extends JLabel {
                 e -> {
                     if (isMined(getXFieldCoordinate(), getYFieldCoordinate())) {
                         gameOver();
+
                     } else {
                         if (howManyMinedNeighboursIndex(getXFieldCoordinate(), getYFieldCoordinate()) == 0)
                             uncoverFieldsWithNoNeighbours(getXFieldCoordinate(), getYFieldCoordinate());
@@ -177,6 +188,7 @@ public class MineSweeper extends JLabel {
     }
 
     private void gameOver() {
+        drawMine = true;
         prepareLabelWithGameOver();
         prepareButtonWithRetry();
         repaint();

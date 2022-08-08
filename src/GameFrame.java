@@ -55,10 +55,7 @@ public class GameFrame extends JFrame {
                         gameLabel.repaint();
                     }
                 }
-
-
             }
         }
     }
-
 }
