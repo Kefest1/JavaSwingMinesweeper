@@ -10,6 +10,8 @@ public class MainMenu extends JLabel {
     JButton startGameButton;
     JButton exitGameButton;
 
+    private static final Color MAIN_MENU_COLOR = new Color(43, 43, 44);
+
     public MainMenu(GameFrame gameFrame) {
         this.gameFrame = gameFrame;
         prepareGreetingPanel();
@@ -20,7 +22,7 @@ public class MainMenu extends JLabel {
 
     private void prepareThis() {
         this.setOpaque(true);
-        this.setBackground(new Color(43, 43, 44));
+        this.setBackground(MAIN_MENU_COLOR);
         this.setBorder(BorderFactory.createLineBorder(Color.BLACK, 12));
         gameFrame.add(this);
     }
