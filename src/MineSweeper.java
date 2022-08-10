@@ -5,7 +5,7 @@ import java.util.Random;
 public class MineSweeper extends JLabel {
     static final int ROW_FIELDS = 11;
     static final int COLUMN_FIELDS = 13;
-    private static final int MINES_AMOUNT = 2;
+    private static final int MINES_AMOUNT = 16;
     static final int FIELD_SIZE = 60;
     private static final int FIELD_GAP = 10;
     private static final int MINE_SIZE = FIELD_SIZE - FIELD_GAP;
