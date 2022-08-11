@@ -7,12 +7,14 @@ public class MineSweeper extends JLabel {
     static final int COLUMN_FIELDS = 13;
     private static final int MINES_AMOUNT = 16;
     static final int FIELD_SIZE = 60;
-    private static final int FIELD_GAP = 10;
-    private static final int MINE_SIZE = FIELD_SIZE - FIELD_GAP;
+    private static final int MINE_SIZE = 50;
+    private static final int FIELD_GAP = FIELD_SIZE - MINE_SIZE;
+
     private static final int FIELD_GAP_HALF = FIELD_GAP / 2;
     private static final int CHECK_BUTTON_BORDER_THICKNESS = 7;
 
     private boolean drawMine;
+    private boolean isTimer;
     private static final int TOTAL_FIELDS_TO_UNCOVER = (COLUMN_FIELDS * ROW_FIELDS) - MINES_AMOUNT;
     private int fieldsToUncover = TOTAL_FIELDS_TO_UNCOVER;
     private int minesRemaining = MINES_AMOUNT;
@@ -43,6 +45,7 @@ public class MineSweeper extends JLabel {
     JLabel labelWithRemainingMinesAmount;
     JLabel youWonLabel;
     JLabel gameOverLabel;
+    GameTimer gameTimer;
 
     private static final Color BACKGROUND_COLOR = new Color(43, 43, 44);
     private static final Color MINE_FIELD_COLOR = new Color(181, 182, 181);
@@ -51,15 +54,19 @@ public class MineSweeper extends JLabel {
     GameFrame gameFrame;
 
     MineSweeper(GameFrame gameFrame) {
-        drawMine = false;
-        setMineField();
+        gameTimer = new GameTimer(this);
+
+        isTimer = drawMine = false;
+        currentlyAt = new Coordinates(0, 0);
+        gameFrame.isRunning = true;
+
         this.setFocusable(true);
         this.requestFocus();
         this.setOpaque(true);
         this.setBackground(BACKGROUND_COLOR);
-        currentlyAt = new Coordinates(0, 0);
         this.gameFrame = gameFrame;
-        gameFrame.isRunning = true;
+
+        setMineField();
         generateMines();
         createButtons();
         prepareLabelWithRemainingMinesAmount();
@@ -168,9 +175,15 @@ public class MineSweeper extends JLabel {
         buttonUncoverField.setBounds(570, 200, 180, 75);
         buttonUncoverField.addActionListener(
                 e -> {
+                    if (!isTimer) {
+                        this.remove(gameTimer);
+                        gameTimer = new GameTimer(this);
+                        isTimer = true;
+                        this.add(gameTimer);
+                        gameTimer.startCounting();
+                    }
                     if (isMined(getXFieldCoordinate(), getYFieldCoordinate())) {
                         gameOver();
-
                     } else {
                         if (howManyMinedNeighboursIndex(getXFieldCoordinate(), getYFieldCoordinate()) == 0)
                             uncoverFieldsWithNoNeighbours(getXFieldCoordinate(), getYFieldCoordinate());
@@ -179,7 +192,9 @@ public class MineSweeper extends JLabel {
                             repaint();
                             prepareYouWonLabel();
                             prepareExitButton();
+                            gameTimer.stopCounting();
                             prepareButtonWithRetry();
+                            isTimer = false;
                         } else repaint();
                         mineField[getXFieldCoordinate()][getYFieldCoordinate()] = StatusOfField.FIELD_IS_UNCOVERED;
                     }
@@ -191,7 +206,9 @@ public class MineSweeper extends JLabel {
     }
 
     private void gameOver() {
+        gameTimer.stopCounting();
         drawMine = true;
+        isTimer = false;
         prepareLabelWithGameOver();
         prepareButtonWithRetry();
         repaint();
@@ -300,7 +317,10 @@ public class MineSweeper extends JLabel {
         buttonRetry.setBounds(100, 180, 150, 75);
         buttonRetry.setFocusable(false);
         buttonRetry.addActionListener(
-                e -> prepareNewGame()
+                e -> {
+                    this.remove(gameTimer);
+                    prepareNewGame();
+                }
         );
         this.add(buttonRetry);
     }
@@ -313,6 +333,8 @@ public class MineSweeper extends JLabel {
         setMineField();
         generateMines();
         createButtons();
+        gameTimer = new GameTimer(this);
+        isTimer = false;
 
         if (youWonLabel != null) remove(youWonLabel);
         if (gameOverLabel != null) remove(gameOverLabel);
