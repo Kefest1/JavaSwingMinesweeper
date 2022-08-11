@@ -37,7 +37,7 @@ class MyTimerTask extends TimerTask {
 
     @Override
     public void run() {
-        if (timerClass.seconds == 60) {
+        if (timerClass.seconds == 59) {
             timerClass.seconds = 0;
             timerClass.minutes++;
         }
